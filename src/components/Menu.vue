@@ -19,7 +19,7 @@ export default defineComponent({
     name: "Menu",
     data() {
         return {
-            difficulty: 4900
+            difficulty: "4900"
         }
     },
     setup() {
@@ -29,7 +29,7 @@ export default defineComponent({
     },
     methods: {
         generateNewSudoku(e: Event) {
-            this.generateSudoku(this.$data.difficulty)
+            this.generateSudoku(parseInt(this.$data.difficulty, 10))
         }
     }
 });

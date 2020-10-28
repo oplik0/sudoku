@@ -144,6 +144,7 @@ function difficultyTest(sudoku: number[]): number {
     );
     let difficulty = 0;
     let noInsert = 0;
+    const initSize = setIndexes.size;
     const methodsUsed = { candidateLines: false };
     while (setIndexes.size > 0) {
         for (const setIndex of setIndexes) {
@@ -207,7 +208,7 @@ function difficultyTest(sudoku: number[]): number {
                 noInsert = 0;
             }
         }
-        if (noInsert >= setIndexes.size) {
+        if (noInsert >= initSize) {
             // candidate lines
             for (const setIndex of setIndexes) {
                 const column = setIndex % 9;
@@ -288,13 +289,13 @@ function difficultyTest(sudoku: number[]): number {
                             // self - the only possible place for this value in a block
                             sudokuWithCandidates[setIndex] = value;
                             setIndexes.delete(value);
-                            difficulty += 200;
+                            difficulty += 100;
                             break;
                     }
                 }
             }
         }
-        if (noInsert >= setIndexes.size * 2) {
+        if (noInsert >= initSize * 2) {
             return 4500 * Math.floor(difficulty / 4000 + 1) + difficulty;
         }
     }
@@ -318,12 +319,19 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[removalIndex] = NaN;
     }
     let resultingDifficulty = difficultyTest(sudoku);
+    const backupSudoku = [...sudoku];
     while (
         resultingDifficulty < difficulty - 500 ||
         resultingDifficulty > difficulty + 500
     ) {
+        if (resultingDifficulty > difficulty + 1000) {
+            if (difficulty >= 10000) {
+                break;
+            }
+            sudoku = [...backupSudoku];
+        }
         removalIndexes.clear();
-        while (removalIndexes.size < 4) {
+        while (removalIndexes.size < 2) {
             const removalIndex = randomInt(0, 81);
             removalIndexes.add(removalIndex);
             removalIndexes.add(80 - removalIndex);
