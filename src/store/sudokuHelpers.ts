@@ -426,7 +426,8 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[removalIndex] = NaN;
     }
     let resultingDifficulty = difficultyTest(sudoku);
-    let backupSudoku = [...sudoku];
+    const backupSudokus = [sudoku];
+    let failCounter = 0;
     while (
         resultingDifficulty < difficulty - 500 ||
         resultingDifficulty > difficulty + 500
@@ -435,7 +436,11 @@ export function generateSudoku(state: State, difficulty: number): void {
             if (difficulty >= 10000) {
                 break;
             }
-            sudoku = [...backupSudoku];
+            sudoku =
+                backupSudokus[
+                    backupSudokus.length - Math.floor(failCounter / 3)
+                ];
+            failCounter++;
         }
         let removalIndex = randomInt(0, 81);
         while (Number.isNaN(sudoku[removalIndex])) {
@@ -446,9 +451,14 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[80 - removalIndex] = NaN;
         try {
             resultingDifficulty = difficultyTest(sudoku);
-            backupSudoku = [...sudoku];
+            backupSudokus.push(sudoku);
+            failCounter = 0;
         } catch {
-            sudoku = [...backupSudoku];
+            sudoku =
+                backupSudokus[
+                    backupSudokus.length - Math.floor(failCounter / 3)
+                ];
+            failCounter++;
             resultingDifficulty = difficultyTest(sudoku);
         }
     }
