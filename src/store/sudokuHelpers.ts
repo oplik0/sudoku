@@ -432,34 +432,36 @@ export function generateSudoku(state: State, difficulty: number): void {
         resultingDifficulty < difficulty - 500 ||
         resultingDifficulty > difficulty + 500
     ) {
-        if (resultingDifficulty > difficulty + 500) {
-            if (difficulty >= 10000) {
-                break;
-            }
-            sudoku =
-                backupSudokus[
-                    backupSudokus.length - Math.floor(failCounter / 3)
-                ];
-            failCounter++;
-        }
         let removalIndex = randomInt(0, 81);
         while (Number.isNaN(sudoku[removalIndex])) {
             removalIndex = randomInt(0, 81);
         }
-
+        if (
+            failCounter > 0 &&
+            failCounter % 3 === 0 &&
+            backupSudokus.length > 1
+        ) {
+            backupSudokus.pop();
+        }
         sudoku[removalIndex] = NaN;
         sudoku[80 - removalIndex] = NaN;
         try {
             resultingDifficulty = difficultyTest(sudoku);
-            backupSudokus.push(sudoku.slice());
-            failCounter = 0;
+
+            if (resultingDifficulty > difficulty + 500) {
+                if (difficulty >= 8000 && difficulty < 50000) {
+                    break;
+                }
+                sudoku = backupSudokus[backupSudokus.length - 1].slice();
+                failCounter++;
+            } else {
+                failCounter = 0;
+                backupSudokus.push(sudoku.slice());
+            }
         } catch {
-            sudoku =
-                backupSudokus[
-                    backupSudokus.length - Math.floor(failCounter / 3)
-                ];
+            sudoku = backupSudokus[backupSudokus.length - 1].slice();
             failCounter++;
-            resultingDifficulty = difficultyTest(sudoku);
+            continue;
         }
     }
     state.sudoku = state.sudoku.map((_, i) => {

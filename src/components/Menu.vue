@@ -2,33 +2,42 @@
     <div class="menu" id="sudoku-menu">
         <select v-model="difficulty">
             <option value="3500">Bardzo łatwe</option>
-            <option value="4000">Łatwe</option>
-            <option value="5000">Średnie</option>
-            <option value="6000">Trudne</option>
+            <option value="4500">Łatwe</option>
+            <option value="6500">Średnie</option>
+            <option value="9500">Trudne</option>
         </select>
-        <button @click="generateNewSudoku">Wygeneruj</button>
+        <button @click="generateNewSudoku" :disabled="lockInterface">Wygeneruj</button>
     </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import {useStore} from "../store";
+import { useStore } from "../store";
 
 export default defineComponent({
     name: "Menu",
     data() {
         return {
-            difficulty: "4000"
-        }
+            difficulty: "4500",
+            lockInterface: false
+        };
     },
     setup() {
         const store = useStore();
-        const generateSudoku = (difficulty: number) => store.commit("GenerateNew", {difficulty})
-        return {generateSudoku}
+        const generateSudoku = (difficulty: number) =>
+            store.commit("GenerateNew", { difficulty });
+        return { generateSudoku };
     },
     methods: {
         generateNewSudoku(e: Event) {
-            this.generateSudoku(parseInt(this.$data.difficulty, 10))
+            this.lockInterface = true;
+            try{
+                this.generateSudoku(parseInt(this.$data.difficulty, 10));
+            }
+            catch {
+                this.generateSudoku(4500);
+            }
+             this.lockInterface = false;
         }
     }
 });

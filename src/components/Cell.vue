@@ -2,7 +2,14 @@
     <div
         class="cell"
         :id="'cell-' + index"
-        :class="{ enabled: enabled, valid: valid, 'border-top': index%27<9, 'border-bottom': index%27>=18, 'border-right': index%3===2, 'border-left': index%3===0}"
+        :class="{
+            enabled: enabled,
+            valid: valid,
+            'border-top': index % 27 < 9,
+            'border-bottom': index % 27 >= 18,
+            'border-right': index % 3 === 2,
+            'border-left': index % 3 === 0
+        }"
     >
         <input
             type="text"
@@ -16,11 +23,19 @@
             @focus="select"
             @click="select"
             @input="select"
-            @keyup.down="selectDifferentCell(index > 71 ? index%9 : index + 9)"
-            @keyup.up="selectDifferentCell(index < 9 ? 72+index%9 : index - 9)"
-            @keyup.left="selectDifferentCell(index % 9 === 0 ? index + 8 : index - 1)"
-            @keyup.right="selectDifferentCell(index%9 === 8 ? index - 8 : index + 1)"
-            :class="{ enabled: enabled, valid: valid, matched: matched, }"
+            @keyup.down="
+                selectDifferentCell(index > 71 ? index % 9 : index + 9)
+            "
+            @keyup.up="
+                selectDifferentCell(index < 9 ? 72 + (index % 9) : index - 9)
+            "
+            @keyup.left="
+                selectDifferentCell(index % 9 === 0 ? index + 8 : index - 1)
+            "
+            @keyup.right="
+                selectDifferentCell(index % 9 === 8 ? index - 8 : index + 1)
+            "
+            :class="{ enabled: enabled, valid: valid, matched: matched }"
         />
     </div>
 </template>
@@ -33,7 +48,7 @@ export default defineComponent({
     data() {
         const store = useStore();
         const index = this.index;
-        const inputRegex = /^\d$/i
+        const inputRegex = /^\d$/i;
         const setCell = (value: number) =>
             store.commit("SetCell", { index, value, quickCheck: false });
         const value = computed({
@@ -52,20 +67,19 @@ export default defineComponent({
             const cell = e?.target;
             if (cell instanceof HTMLInputElement) {
                 if (!inputRegex.test(cell.value) && cell.value !== "NaN")
-                    cell.value = ""
+                    cell.value = "";
                 cell.focus();
                 cell.select();
-
             }
-            store.commit("Select", {index});
+            store.commit("Select", { index });
         };
         const selectDifferentCell = (index: number) => {
-            const cell = document.querySelector(`#cell-${index}-input`)
+            const cell = document.querySelector(`#cell-${index}-input`);
             if (cell instanceof HTMLInputElement) {
                 cell.focus();
                 cell.select();
             }
-        }
+        };
         return {
             value,
             valid,

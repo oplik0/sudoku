@@ -1,5 +1,5 @@
 <template>
-    <div class="sudoku" id="sudoku-container" :class="{solved: solved}">
+    <div class="sudoku" id="sudoku-container" :class="{ solved: solved }">
         <Cell
             v-for="(cell, index) in sudoku"
             :key="index"
