@@ -426,7 +426,7 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[removalIndex] = NaN;
     }
     let resultingDifficulty = difficultyTest(sudoku);
-    const backupSudokus = [sudoku];
+    const backupSudokus = [sudoku.slice()];
     let failCounter = 0;
     while (
         resultingDifficulty < difficulty - 500 ||
@@ -451,7 +451,7 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[80 - removalIndex] = NaN;
         try {
             resultingDifficulty = difficultyTest(sudoku);
-            backupSudokus.push(sudoku);
+            backupSudokus.push(sudoku.slice());
             failCounter = 0;
         } catch {
             sudoku =
