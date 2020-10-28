@@ -1,11 +1,10 @@
 <template>
     <div class="menu" id="sudoku-menu">
         <select v-model="difficulty">
-            <option value="4000">Bardzo łatwe</option>
-            <option value="4900">Łatwe</option>
-            <option value="6000">Średnie</option>
-            <option value="7600">Podchwytliwe</option>
-            <option value="10000">Trudne</option>
+            <option value="3500">Bardzo łatwe</option>
+            <option value="4000">Łatwe</option>
+            <option value="5000">Średnie</option>
+            <option value="6000">Trudne</option>
         </select>
         <button @click="generateNewSudoku">Wygeneruj</button>
     </div>
@@ -19,7 +18,7 @@ export default defineComponent({
     name: "Menu",
     data() {
         return {
-            difficulty: "4900"
+            difficulty: "4000"
         }
     },
     setup() {

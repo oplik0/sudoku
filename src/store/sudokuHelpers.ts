@@ -145,44 +145,45 @@ function difficultyTest(sudoku: number[]): number {
     let difficulty = 0;
     let noInsert = 0;
     const initSize = setIndexes.size;
-    const methodsUsed = { candidateLines: false };
+    const methodsUsed = { candidateLines: false, doublePairs: false };
     while (setIndexes.size > 0) {
-        for (const setIndex of setIndexes) {
+        const indexSnapshot = new Set([...setIndexes]);
+        for (const setIndex of indexSnapshot) {
+            const columnArray = new Set(
+                Array.from(
+                    new Array(9),
+                    (_, i) => sudokuWithCandidates[(setIndex % 9) + i * 9]
+                )
+            );
+            const rowArray = new Set(
+                Array.from(
+                    new Array(9),
+                    (_, i) =>
+                        sudokuWithCandidates[setIndex - (setIndex % 9) + i]
+                )
+            );
+            const blockArray = new Set(
+                Array.from(
+                    new Array(9),
+                    (_, i) =>
+                        sudokuWithCandidates[
+                            setIndex -
+                                (setIndex % 3) -
+                                (Math.floor(setIndex / 9) % 3) * 9 +
+                                (i % 3) +
+                                9 * Math.floor(i / 3)
+                        ]
+                )
+            );
+            const existingSet = new Set(
+                [...columnArray, ...rowArray, ...blockArray].filter(
+                    x => !(x instanceof Set)
+                )
+            );
             if (
                 sudokuWithCandidates[setIndex] instanceof Set &&
-                (sudokuWithCandidates[setIndex] as Set<number>).size <= 1
+                (sudokuWithCandidates[setIndex] as Set<number>).size > 1
             ) {
-                const columnArray = new Set(
-                    Array.from(
-                        new Array(9),
-                        (_, i) => sudokuWithCandidates[(setIndex % 9) + i * 9]
-                    )
-                );
-                const rowArray = new Set(
-                    Array.from(
-                        new Array(9),
-                        (_, i) =>
-                            sudokuWithCandidates[setIndex - (setIndex % 9) + i]
-                    )
-                );
-                const blockArray = new Set(
-                    Array.from(
-                        new Array(9),
-                        (_, i) =>
-                            sudokuWithCandidates[
-                                setIndex -
-                                    (setIndex % 3) -
-                                    (Math.floor(setIndex / 27) % 3) +
-                                    i +
-                                    9 * Math.floor(i / 3)
-                            ]
-                    )
-                );
-                const existingSet = new Set([
-                    ...columnArray,
-                    ...rowArray,
-                    ...blockArray
-                ]);
                 const possibleNumbers = [
                     ...(sudokuWithCandidates[setIndex] as Set<number>)
                 ].filter(x => !existingSet.has(x));
@@ -200,103 +201,209 @@ function difficultyTest(sudoku: number[]): number {
                 }
             } else if (sudokuWithCandidates[setIndex] instanceof Set) {
                 setIndexes.delete(setIndex);
-
                 sudokuWithCandidates[setIndex] = [
                     ...(sudokuWithCandidates[setIndex] as Set<number>)
                 ][0];
                 difficulty += 100;
                 noInsert = 0;
             }
-        }
-        if (noInsert >= initSize) {
-            // candidate lines
-            for (const setIndex of setIndexes) {
-                const column = setIndex % 9;
-                const row = Math.floor(setIndex / 9);
-                const block = Array.from(
-                    new Array(9),
-                    (_, i) =>
-                        setIndex -
-                        (setIndex % 3) -
-                        (Math.floor(setIndex / 27) % 3) +
-                        i +
-                        9 * Math.floor(i / 3)
-                );
-                const blockSets = [...setIndexes].filter(i =>
-                    block.includes(i)
-                );
+            if (!(sudokuWithCandidates[setIndex] instanceof Set)) continue;
+            const column = setIndex % 9;
+            const row = Math.floor(setIndex / 9);
+            const block = Array.from(
+                new Array(9),
+                (_, i) =>
+                    setIndex -
+                    (setIndex % 3) -
+                    (Math.floor(setIndex / 9) % 3) * 9 +
+                    (i % 3) +
+                    9 * Math.floor(i / 3)
+            );
+            if (noInsert > initSize) {
+                const blockPairs = [];
                 for (const value of sudokuWithCandidates[setIndex] as Set<
                     number
                 >) {
+                    if (existingSet.has(value)) continue;
+                    const blockSets = [...setIndexes].filter(i =>
+                        block.includes(i)
+                    );
                     let candidateLine = 3;
+                    const pairs = [column, row];
                     for (const blockSetIndex of blockSets) {
                         if (
                             (sudokuWithCandidates[blockSetIndex] as Set<
                                 number
-                            >).has(value) &&
-                            (blockSetIndex % 9 === column ||
-                                Math.floor(blockSetIndex / 9) === row)
+                            >).has(value)
                         ) {
-                            if (candidateLine === 3)
-                                candidateLine =
-                                    (blockSetIndex % 9 === column ? 1 : 0) +
-                                    (Math.floor(blockSetIndex / 9) === row
-                                        ? 2
-                                        : 0);
-                            else if (
-                                (blockSetIndex % 9 === column ? 1 : 0) +
-                                    (Math.floor(blockSetIndex / 9) === row
-                                        ? 2
-                                        : 0) !==
-                                candidateLine
+                            if (
+                                blockSetIndex % 9 === column ||
+                                Math.floor(blockSetIndex / 9) === row
                             ) {
-                                candidateLine = 0;
-                                break;
+                                if (candidateLine === 3)
+                                    candidateLine =
+                                        (blockSetIndex % 9 === column ? 1 : 0) +
+                                        (Math.floor(blockSetIndex / 9) === row
+                                            ? 2
+                                            : 0);
+                                else if (
+                                    (blockSetIndex % 9 === column ? 1 : 0) +
+                                        (Math.floor(blockSetIndex / 9) === row
+                                            ? 2
+                                            : 0) !==
+                                    candidateLine
+                                ) {
+                                    candidateLine = 0;
+                                    break;
+                                }
                             }
+                            pairs.push(
+                                blockSetIndex % 9,
+                                Math.floor(blockSetIndex / 9)
+                            );
                         }
                     }
                     let lineIndexes = [];
                     switch (candidateLine) {
                         case 1:
                             //column
-                            difficulty += methodsUsed.candidateLines
-                                ? 200
-                                : 350;
                             lineIndexes = [...setIndexes].filter(
                                 i => i % 9 === column && i != setIndex
                             );
                             for (const columnIndex of lineIndexes) {
+                                if (
+                                    (sudokuWithCandidates[columnIndex] as Set<
+                                        number
+                                    >).size <= 1
+                                )
+                                    break;
                                 (sudokuWithCandidates[columnIndex] as Set<
                                     number
                                 >).delete(value);
+                                difficulty += methodsUsed.candidateLines
+                                    ? 350
+                                    : 550;
                             }
+                            methodsUsed.candidateLines = true;
                             break;
                         case 2:
                             //row
-                            difficulty += methodsUsed.candidateLines
-                                ? 200
-                                : 350;
                             lineIndexes = [...setIndexes].filter(
                                 i => Math.floor(i / 9) === row && i != setIndex
                             );
                             for (const rowIndex of lineIndexes) {
+                                if (
+                                    (sudokuWithCandidates[rowIndex] as Set<
+                                        number
+                                    >).size <= 1
+                                )
+                                    break;
                                 (sudokuWithCandidates[rowIndex] as Set<
                                     number
                                 >).delete(value);
+                                difficulty += methodsUsed.candidateLines
+                                    ? 350
+                                    : 550;
                             }
+
                             break;
                         case 3:
                             // self - the only possible place for this value in a block
+                            setIndexes.delete(setIndex);
                             sudokuWithCandidates[setIndex] = value;
-                            setIndexes.delete(value);
-                            difficulty += 100;
+                            difficulty += 150;
                             break;
                     }
+                    if (pairs.length === 4) {
+                        pairs.push(value);
+                        blockPairs.push(pairs);
+                    }
+                }
+                if (blockPairs.length > 1) {
+                    const deletionIndexes = [];
+                    const getIndex = (col: number, row: number) => {
+                        return col + row * 9;
+                    };
+                    const inOneOfPairs = (
+                        x: number,
+                        pair: number[],
+                        pair2: number[]
+                    ) => {
+                        return (
+                            x === getIndex(pair[0], pair[1]) ||
+                            x === getIndex(pair[2], pair[3]) ||
+                            x === getIndex(pair2[0], pair2[1]) ||
+                            x === getIndex(pair2[2], pair2[3])
+                        );
+                    };
+                    while (blockPairs.length > 0) {
+                        const pair: number[] = blockPairs.shift() as number[];
+                        for (const pair2 of blockPairs) {
+                            if (pair[4] !== pair2[4]) continue;
+                            if (
+                                (pair2[0] === pair[0] || pair2[2] == pair[0]) &&
+                                (pair2[0] === pair[2] || pair2[2] == pair[2])
+                            ) {
+                                deletionIndexes.push(
+                                    ...[...setIndexes]
+                                        .filter(
+                                            x =>
+                                                !inOneOfPairs(x, pair, pair2) &&
+                                                (x % 9 === pair[0] ||
+                                                    x % 9 === pair[2])
+                                        )
+                                        .map(x => {
+                                            return { index: x, value: pair[4] };
+                                        })
+                                );
+                            }
+                            if (
+                                (pair2[1] === pair[1] || pair2[3] == pair[1]) &&
+                                (pair2[1] === pair[1] || pair2[3] == pair[1])
+                            ) {
+                                deletionIndexes.push(
+                                    ...[...setIndexes]
+                                        .filter(
+                                            x =>
+                                                !inOneOfPairs(x, pair, pair2) &&
+                                                (x % 9 === pair[0] ||
+                                                    x % 9 === pair[2])
+                                        )
+                                        .map(x => {
+                                            return { index: x, value: pair[4] };
+                                        })
+                                );
+                            }
+                        }
+                    }
+                    for (const deletionIndex of deletionIndexes) {
+                        if (
+                            (sudokuWithCandidates[deletionIndex.index] as Set<
+                                number
+                            >).size <= 1
+                        )
+                            continue;
+                        setIndexes.delete(deletionIndex.index);
+                        (sudokuWithCandidates[deletionIndex.index] as Set<
+                            number
+                        >).delete(deletionIndex.value);
+                        difficulty += methodsUsed.doublePairs ? 450 : 700;
+                    }
+                    methodsUsed.doublePairs = true;
                 }
             }
         }
-        if (noInsert >= initSize * 2) {
-            return 4500 * Math.floor(difficulty / 4000 + 1) + difficulty;
+        if (
+            (setIndexes.size === 2 && noInsert >= setIndexes.size) ||
+            (setIndexes.size < 4 && noInsert >= setIndexes.size * 2)
+        ) {
+            sudokuWithCandidates[[...setIndexes][0]] =
+                sudokuWithCandidates[[...setIndexes][0]];
+            setIndexes.delete([...setIndexes][0]);
+        }
+        if (noInsert > initSize * 2) {
+            difficulty = 100000;
+            return difficulty;
         }
     }
     return difficulty;
@@ -319,7 +426,7 @@ export function generateSudoku(state: State, difficulty: number): void {
         sudoku[removalIndex] = NaN;
     }
     let resultingDifficulty = difficultyTest(sudoku);
-    const backupSudoku = [...sudoku];
+    let backupSudoku = [...sudoku];
     while (
         resultingDifficulty < difficulty - 500 ||
         resultingDifficulty > difficulty + 500
@@ -330,16 +437,20 @@ export function generateSudoku(state: State, difficulty: number): void {
             }
             sudoku = [...backupSudoku];
         }
-        removalIndexes.clear();
-        while (removalIndexes.size < 2) {
-            const removalIndex = randomInt(0, 81);
-            removalIndexes.add(removalIndex);
-            removalIndexes.add(80 - removalIndex);
+        let removalIndex = randomInt(0, 81);
+        while (Number.isNaN(sudoku[removalIndex])) {
+            removalIndex = randomInt(0, 81);
         }
-        for (const removalIndex of removalIndexes) {
-            sudoku[removalIndex] = NaN;
+
+        sudoku[removalIndex] = NaN;
+        sudoku[80 - removalIndex] = NaN;
+        try {
+            resultingDifficulty = difficultyTest(sudoku);
+            backupSudoku = [...sudoku];
+        } catch {
+            sudoku = [...backupSudoku];
+            resultingDifficulty = difficultyTest(sudoku);
         }
-        resultingDifficulty = difficultyTest(sudoku);
     }
     state.sudoku = state.sudoku.map((_, i) => {
         return {
