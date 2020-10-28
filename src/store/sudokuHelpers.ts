@@ -324,7 +324,7 @@ export function generateSudoku(state: State, difficulty: number): void {
         resultingDifficulty < difficulty - 500 ||
         resultingDifficulty > difficulty + 500
     ) {
-        if (resultingDifficulty > difficulty + 1000) {
+        if (resultingDifficulty > difficulty + 500) {
             if (difficulty >= 10000) {
                 break;
             }
