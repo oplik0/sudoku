@@ -1,4 +1,10 @@
 {
+    "build": {
+		"distDir": "../dist",
+		"devPath": "http://localhost:5000",
+		"beforeDevCommand": "",
+		"beforeBuildCommand": ""
+	},
     "ctx": {},
     "tauri": {
         "embeddedServer": {
